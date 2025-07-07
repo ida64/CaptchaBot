@@ -1,0 +1,5 @@
+python-dotenv
+audioop-lts
+py-cord
+loguru
+captcha
