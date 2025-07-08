@@ -19,6 +19,47 @@ class VerificationView(discord.ui.View):
 async def on_ready():
     logger.info(f'application_id({bot.application_id}) is ready.')
 
+    view = VerificationView()
+    embed = discord.Embed(
+        title="Captcha Verification",
+        description=f"Click the button below to complete a captcha challenge.\n"
+        "If the challenge is too difficult to read, click the button again to get a new one.",
+        color=discord.Color.blurple()
+    )
+
+    guild_id = int(os.getenv("GUILD_ID", "0"))
+    if guild_id == 0:
+        logger.error("GUILD_ID is not set in environment variables.")
+        return
+    
+    guild = discord.Object(id=guild_id)
+    
+    prompt_channel_id = int(os.getenv("PROMPT_CHANNEL_ID", "0"))
+    if prompt_channel_id == 0:
+        logger.error("PROMPT_CHANNEL_ID is not set in environment variables.")
+        return
+    
+    prompt_channel = bot.get_channel(prompt_channel_id)
+    if prompt_channel:
+        async for message in prompt_channel.history(limit=None):
+            await message.delete()
+        await prompt_channel.send(embed=embed, view=view)
+
+
+
+
+@bot.event
+async def on_message(message: discord.Message):
+    if message.author == bot.user:
+        return
+
+    prompt_channel_id = int(os.getenv("PROMPT_CHANNEL_ID", "0"))
+    if prompt_channel_id == 0:
+        return
+    
+    if message.channel.id == prompt_channel_id:
+        await message.delete()
+
 @bot.command(name="send_verification_button", description="Send a verification button for users to start verification.")
 @discord.default_permissions(administrator=True)
 async def send_verification_button(ctx: discord.ApplicationContext):
