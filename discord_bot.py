@@ -8,15 +8,28 @@ captcha_generator = CaptchaGenerator()
 bot = discord.Bot()
 
 class VerificationView(discord.ui.View):
+    """A Discord UI view containing the verification button."""
+
     def __init__(self):
+        """Initializes the verification view with a persistent button."""
         super().__init__(timeout=None)
 
     @discord.ui.button(label="🤖 Start Verification", style=discord.ButtonStyle.primary, custom_id="start_verification")
     async def start_verification(self, button: discord.ui.Button, interaction: discord.Interaction):
+        """Callback function triggered when the verification button is clicked.
+
+        Args:
+            button (discord.ui.Button): The button that was clicked.
+            interaction (discord.Interaction): The interaction that triggered the callback.
+        """
         await verify(interaction)
 
 @bot.event
 async def on_ready():
+    """Event handler triggered when the bot is ready.
+
+    Sets up the verification prompt message in the configured channel.
+    """
     logger.info(f'application_id({bot.application_id}) is ready.')
 
     view = VerificationView()
@@ -31,9 +44,7 @@ async def on_ready():
     if guild_id == 0:
         logger.error("GUILD_ID is not set in environment variables.")
         return
-    
-    guild = discord.Object(id=guild_id)
-    
+        
     prompt_channel_id = int(os.getenv("PROMPT_CHANNEL_ID", "0"))
     if prompt_channel_id == 0:
         logger.error("PROMPT_CHANNEL_ID is not set in environment variables.")
@@ -45,11 +56,15 @@ async def on_ready():
             await message.delete()
         await prompt_channel.send(embed=embed, view=view)
 
-
-
-
 @bot.event
 async def on_message(message: discord.Message):
+    """Event handler triggered on every message.
+
+    Deletes messages in the verification prompt channel to keep it clean.
+
+    Args:
+        message (discord.Message): The message object received.
+    """
     if message.author == bot.user:
         return
 
@@ -63,6 +78,11 @@ async def on_message(message: discord.Message):
 @bot.command(name="send_verification_button", description="Send a verification button for users to start verification.")
 @discord.default_permissions(administrator=True)
 async def send_verification_button(ctx: discord.ApplicationContext):
+    """Admin command to send the verification prompt with the button.
+
+    Args:
+        ctx (discord.ApplicationContext): The context of the command.
+    """
     view = VerificationView()
     embed = discord.Embed(
         title="Captcha Verification",
@@ -74,9 +94,13 @@ async def send_verification_button(ctx: discord.ApplicationContext):
 
     await ctx.respond(embed=embed, view=view)
 
-
 @bot.command(name="verify", description="Complete the verification process.")
 async def verify(ctx: discord.ApplicationContext):
+    """Starts the captcha verification process for the user.
+
+    Args:
+        ctx (discord.ApplicationContext): The context of the command or interaction.
+    """
     verified_role_id = int(os.getenv("VERIFIED_ROLE_ID", "0"))
     if verified_role_id == 0:
         await ctx.respond("Verification role is not set up. Please contact the administrator.", ephemeral=True)
@@ -136,6 +160,12 @@ async def verify(ctx: discord.ApplicationContext):
 
 @bot.command(name="submit_captcha", description="Submit your captcha solution.")
 async def submit_captcha(ctx: discord.ApplicationContext, solution: str):
+    """Submits and validates the user's captcha response.
+
+    Args:
+        ctx (discord.ApplicationContext): The context of the command.
+        solution (str): The solution input by the user.
+    """
     member = ctx.author
     if not hasattr(bot, "captcha_challenges") or member.id not in bot.captcha_challenges:
         await ctx.respond("No captcha challenge found. Please use /verify first.", ephemeral=True)
@@ -154,6 +184,7 @@ async def submit_captcha(ctx: discord.ApplicationContext, solution: str):
         await ctx.respond("Incorrect captcha. Please try again.", ephemeral=True)
 
 async def run_bot():
+    """Starts the bot using the token from the environment variables."""
     token = os.getenv("DISCORD_BOT_TOKEN")
     if not token:
         logger.error("DISCORD_BOT_TOKEN is not set in environment variables.")
