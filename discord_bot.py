@@ -7,38 +7,47 @@ captcha_generator = CaptchaGenerator()
 
 bot = discord.Bot()
 
+class VerificationView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="🤖 Start Verification", style=discord.ButtonStyle.primary, custom_id="start_verification")
+    async def start_verification(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await verify(interaction)
+
 @bot.event
 async def on_ready():
     logger.info(f'application_id({bot.application_id}) is ready.')
 
-@bot.event
-async def on_member_join(member: discord.Member):
-    log_channel_id = int(os.getenv("LOG_CHANNEL_ID", "0"))
-    if log_channel_id == 0:
-        return
-    
-    log_channel = bot.get_channel(log_channel_id)
-    if log_channel:
-        await log_channel.send(
-            f"{member.global_name} joined the guild.\n"
-            f"Account Age: {member.created_at}\n"
-        )
+@bot.command(name="send_verification_button", description="Send a verification button for users to start verification.")
+@discord.default_permissions(administrator=True)
+async def send_verification_button(ctx: discord.ApplicationContext):
+    view = VerificationView()
+    embed = discord.Embed(
+        title="Captcha Verification",
+        description=f"Click the button below to complete a captcha challenge.\n"
+        "If the challenge is too difficult to read, click the button again to get a new one.",
+        color=discord.Color.blurple()
+    )\
+    .set_author(name=ctx.guild.name, icon_url=ctx.guild.icon.url if ctx.guild.icon else None)
+
+    await ctx.respond(embed=embed, view=view)
 
 
 @bot.command(name="verify", description="Complete the verification process.")
 async def verify(ctx: discord.ApplicationContext):
     verified_role_id = int(os.getenv("VERIFIED_ROLE_ID", "0"))
     if verified_role_id == 0:
-        await ctx.respond("Verification role is not set up. Please contact the administrator.")
+        await ctx.respond("Verification role is not set up. Please contact the administrator.", ephemeral=True)
         return
     
-    member = ctx.author
+    member = ctx.author if hasattr(ctx, "author") else ctx.user
     if not isinstance(member, discord.Member):
-        await ctx.respond("This command can only be used in a server.")
+        await ctx.respond("This command can only be used in a server.", ephemeral=True)
         return
 
     if any(role.id == verified_role_id for role in member.roles):
-        await ctx.respond("You are already verified.")
+        await ctx.respond("You are already verified.", ephemeral=True)
         return
     
     file_name, challenge = captcha_generator.generate_captcha()
@@ -102,14 +111,6 @@ async def submit_captcha(ctx: discord.ApplicationContext, solution: str):
         del bot.captcha_challenges[member.id]
     else:
         await ctx.respond("Incorrect captcha. Please try again.", ephemeral=True)
-
-async def run_bot():
-    token = os.getenv("DISCORD_BOT_TOKEN")
-    if not token:
-        logger.error("DISCORD_BOT_TOKEN is not set in environment variables.")
-        return
-    
-    await bot.start(token)
 
 async def run_bot():
     token = os.getenv("DISCORD_BOT_TOKEN")
