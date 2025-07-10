@@ -1,11 +1,9 @@
 """Entry point for starting the service.
 
-Loads environment variables and runs the bot's main event loop.
+Starts the bot's main event loop.
 """
-import sys
 
 if __name__ == "__main__":
-
     from discord_bot import run_bot
     import asyncio
 
