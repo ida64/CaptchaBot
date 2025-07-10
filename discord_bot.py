@@ -7,6 +7,9 @@ captcha_generator = CaptchaGenerator()
 
 bot = discord.Bot()
 
+from config import Config
+config = Config.load_config("config.yaml")
+
 class VerificationView(discord.ui.View):
     """A Discord UI view containing the verification button."""
 
@@ -40,12 +43,12 @@ async def on_ready():
         color=discord.Color.blurple()
     )
 
-    guild_id = int(os.getenv("GUILD_ID", "0"))
+    guild_id = int(config.get(key="discord.serviced_guild.id", default=0))
     if guild_id == 0:
         logger.error("GUILD_ID is not set in environment variables.")
         return
         
-    prompt_channel_id = int(os.getenv("PROMPT_CHANNEL_ID", "0"))
+    prompt_channel_id = int(config.get(key="discord.serviced_guild.prompt_channel_id", default=0))
     if prompt_channel_id == 0:
         logger.error("PROMPT_CHANNEL_ID is not set in environment variables.")
         return
@@ -68,7 +71,7 @@ async def on_message(message: discord.Message):
     if message.author == bot.user:
         return
 
-    prompt_channel_id = int(os.getenv("PROMPT_CHANNEL_ID", "0"))
+    prompt_channel_id = int(config.get(key="discord.serviced_guild.prompt_channel_id", default=0))
     if prompt_channel_id == 0:
         return
     
@@ -101,7 +104,7 @@ async def verify(ctx: discord.ApplicationContext):
     Args:
         ctx (discord.ApplicationContext): The context of the command or interaction.
     """
-    verified_role_id = int(os.getenv("VERIFIED_ROLE_ID", "0"))
+    verified_role_id = int(config.get(key="discord.serviced_guild.verified_role_id", default=0))
     if verified_role_id == 0:
         await ctx.respond("Verification role is not set up. Please contact the administrator.", ephemeral=True)
         return
@@ -136,7 +139,7 @@ async def verify(ctx: discord.ApplicationContext):
         bot.captcha_challenges = {}
     bot.captcha_challenges[member.id] = (challenge, verified_role_id)
 
-    log_channel_id = int(os.getenv("LOG_CHANNEL_ID", "0"))
+    log_channel_id = int(config.get(key="discord.serviced_guild.log_channel_id", default=0))
     if log_channel_id == 0:
         return
     
@@ -185,9 +188,9 @@ async def submit_captcha(ctx: discord.ApplicationContext, solution: str):
 
 async def run_bot():
     """Starts the bot using the token from the environment variables."""
-    token = os.getenv("DISCORD_BOT_TOKEN")
+    token = config.get(key="discord.authentication.token", default=None)
     if not token:
-        logger.error("DISCORD_BOT_TOKEN is not set in environment variables.")
+        logger.error("Missing \"discord.authentication.token\" in config.yaml.")
         return
     
     await bot.start(token)

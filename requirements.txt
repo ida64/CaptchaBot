@@ -3,3 +3,4 @@ audioop-lts
 py-cord
 loguru
 captcha
+ruamel.yaml

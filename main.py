@@ -2,11 +2,9 @@
 
 Loads environment variables and runs the bot's main event loop.
 """
-
-from dotenv import load_dotenv
+import sys
 
 if __name__ == "__main__":
-    load_dotenv()
 
     from discord_bot import run_bot
     import asyncio
