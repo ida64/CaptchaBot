@@ -45,12 +45,12 @@ async def on_ready():
 
     guild_id = int(config.get(key="discord.serviced_guild.id", default=0))
     if guild_id == 0:
-        logger.error("GUILD_ID is not set in environment variables.")
+        logger.error("Missing \"discord.serviced_guild.id\" in config.yaml.")
         return
         
     prompt_channel_id = int(config.get(key="discord.serviced_guild.prompt_channel_id", default=0))
     if prompt_channel_id == 0:
-        logger.error("PROMPT_CHANNEL_ID is not set in environment variables.")
+        logger.error("Missing \"discord.serviced_guild.prompt_channel_id\" in config.yaml.")
         return
     
     prompt_channel = bot.get_channel(prompt_channel_id)
