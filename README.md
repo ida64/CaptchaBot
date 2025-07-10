@@ -26,4 +26,4 @@ CaptchaBot is a Python-based Discord bot designed to prevent spam and raids by r
    ```bash
    python main.py
    ```
-4. Edit the `config.json` file to set your bot token guild specific settings.
+4. Edit the `config.yaml` file to set your bot token guild specific settings.
