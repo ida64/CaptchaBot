@@ -21,13 +21,13 @@ class CaptchaGenerator:
         characters = string.ascii_letters + string.digits
         return ''.join(random.choices(characters, k=6))
     
-    def generate_captcha(self) -> tuple[str, str]:
+    def generate_captcha(self, challenge = None) -> tuple[str, str]:
         """Generates a CAPTCHA image and returns the file path and solution.
 
         Returns:
             tuple[str, str]: A tuple containing the file path to the image and the CAPTCHA solution string.
         """
-        challenge = self._challenge()
+        challenge = challenge or self._challenge()
         file_path = f"{TEMP_DIR}{uuid.uuid4()}.png"
         self._image_captcha.write(challenge, file_path)
         return file_path, challenge
