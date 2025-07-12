@@ -4,3 +4,6 @@ py-cord
 loguru
 captcha
 ruamel.yaml
+fastapi
+uvicorn
+discord-oauth2.py

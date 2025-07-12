@@ -31,6 +31,8 @@ class Config:
             'discord': CommentedMap({
                 'authentication': CommentedMap({
                     'token': '',
+                    'client_id': 0,
+                    'client_secret': '',
                 }),
                 'serviced_guild': CommentedMap({
                     'id': 0,
